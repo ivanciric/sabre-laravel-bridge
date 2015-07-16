@@ -8,7 +8,7 @@
 
 namespace Emcodenet\SabreLaravelBridge;
 
-use Illuminate\Http\Request; as Request;
+use \Illuminate\Http\Request as Request;
 
 class SabreLaravelBridge {
 
