@@ -8,7 +8,7 @@
 
 namespace Emcodenet\SabreLaravelBridge;
 
-use \Illuminate\Http\Request as Request;
+use GuzzleHttp\Client;
 
 class SabreLaravelBridge {
 
@@ -16,9 +16,13 @@ class SabreLaravelBridge {
     const API_URL_KEY = "apiUrl";
     const CLIENT_ID_KEY = "clientId";
     const CLIENT_SECRET_KEY = "clientSecret";
+
     private $db;
     private $apiUrl;
     private $secret;
+
+    private $client;
+
     public function __construct()
     {
         $this->db = FileDB::entity('main');
@@ -26,6 +30,14 @@ class SabreLaravelBridge {
         $clientId = $this->db->get(self::CLIENT_ID_KEY);
         $clientSecret = $this->db->get(self::CLIENT_SECRET_KEY);
         $this->secret = base64_encode(base64_encode($clientId) . ":" . base64_encode($clientSecret));
+
+        $this->client = new Client([
+            // Base URI is used with relative requests
+            'base_uri' => 'https://api.test.sabre.com/v1',
+            // You can set any number of default request options.
+            'timeout'  => 2.0,
+        ]);
+
     }
     function get($uri)
     {
@@ -34,12 +46,22 @@ class SabreLaravelBridge {
         if (empty($token)) {
             $token = $this->updateToken($this->secret, $db);
         }
-        $response = Request::get($this->apiUrl . $uri)
-            ->addHeader("Authorization", "Bearer " . $token)
-            ->send();
+//        $response = Request::get($this->apiUrl . $uri)
+//            ->addHeader("Authorization", "Bearer " . $token)
+//            ->send();
+
+        $response = $this->client->get($uri, [
+            'headers' => [
+                'Authorization' => 'Bearer '. $token,
+            ]
+        ]);
+
+        exit(var_dump($response));
+
         $body = $response->body;
         if ($response->code != 200 && ($body->status == "NotProcessed" && $body->errorCode == "ERR.2SG.SEC.INVALID_CREDENTIALS")) {
             $token = $this->updateToken($this->secret, $db);
+
             $response = Request::get($this->apiUrl . $uri)
                 ->addHeader("Authorization", "Bearer " . $token)
                 ->send();
@@ -55,10 +77,12 @@ class SabreLaravelBridge {
     function getToken($secret)
     {
         $headers = array("Authorization" => "Basic " . $secret, "Content-Type" => "application/x-www-form-urlencoded");
+
         $response = Request::post($this->apiUrl . "/auth/token")
             ->addHeaders($headers)
             ->body("grant_type=client_credentials")
             ->send();
+
         $resArr = json_decode($response);
         if (array_key_exists('access_token', $resArr)) {
             return $resArr->access_token;
