@@ -34,7 +34,6 @@ class SabreLaravelBridge
         $clientSecret = $this->db->get(self::CLIENT_SECRET_KEY);
         $this->secret = base64_encode(base64_encode($clientId) . ":" . base64_encode($clientSecret));
 
-
         $this->client = new Client();
 
     }
@@ -42,17 +41,20 @@ class SabreLaravelBridge
     function get($uri)
     {
         $db = FileDB::entity('main');
-        //$token = $db->get(self::TOKEN_KEY);
-        //if (empty($token)) {
+        $token = $db->get(self::TOKEN_KEY);
+        if (empty($token)) {
         $token = $this->updateToken($this->secret, $db);
-        //}
+        }
 
-
-        $response = $this->client->get('https://api.test.sabre.com/v1/shop/flights/fares', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $token,
-            ]
-        ]);
+        try{
+            $response = $this->client->get($this->apiUrl . $uri, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                ]
+            ]);
+        }catch(\Exception $e){
+            exit('Error: ' . $e->getMessage());
+        }
 
         exit(var_dump($response));
 
@@ -80,6 +82,7 @@ class SabreLaravelBridge
             "Authorization" => "Basic " . $secret,
             "Content-Type" => "application/x-www-form-urlencoded"
         ];
+
 
         $response = $this->client->post($this->apiUrl . "/auth/token", [
             'headers' => [
