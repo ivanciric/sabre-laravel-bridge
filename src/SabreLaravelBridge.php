@@ -8,7 +8,7 @@
 
 namespace Emcodenet\SabreLaravelBridge;
 
-use Httpful\Request;
+use \App\Http\Requests\Request as Request;
 
 class SabreLaravelBridge {
 
