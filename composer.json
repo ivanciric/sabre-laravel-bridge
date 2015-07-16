@@ -3,12 +3,6 @@
     "description": "Laravel port of https://github.com/SabreDevStudio/SabrePhpBridge",
     "type": "Laravel package",
     "license": "MIT",
-    "repositories": [
-      {
-        "type": "git",
-        "url": "https://github.com/nategood/httpful.git"
-      }
-    ],
     "authors": [
         {
             "name": "Ivan Ciric",
@@ -16,7 +10,5 @@
         }
     ],
     "minimum-stability": "stable",
-    "require": {
-      "nategood/httpful": "dev-master"
-    }
+    "require": {}
 }
