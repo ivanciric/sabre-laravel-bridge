@@ -10,7 +10,8 @@ namespace Emcodenet\SabreLaravelBridge;
 
 use GuzzleHttp\Client;
 
-class SabreLaravelBridge {
+class SabreLaravelBridge
+{
 
     const TOKEN_KEY = 'token';
     const API_URL_KEY = "apiUrl";
@@ -20,6 +21,8 @@ class SabreLaravelBridge {
     private $db;
     private $apiUrl;
     private $secret;
+
+    private $client_id;
 
     private $client;
 
@@ -31,28 +34,23 @@ class SabreLaravelBridge {
         $clientSecret = $this->db->get(self::CLIENT_SECRET_KEY);
         $this->secret = base64_encode(base64_encode($clientId) . ":" . base64_encode($clientSecret));
 
-        $this->client = new Client([
-            // Base URI is used with relative requests
-            'base_uri' => 'https://api.test.sabre.com/v1',
-            // You can set any number of default request options.
-            'timeout'  => 2.0,
-        ]);
+
+        $this->client = new Client();
 
     }
+
     function get($uri)
     {
         $db = FileDB::entity('main');
-        $token = $db->get(self::TOKEN_KEY);
-        if (empty($token)) {
-            $token = $this->updateToken($this->secret, $db);
-        }
-//        $response = Request::get($this->apiUrl . $uri)
-//            ->addHeader("Authorization", "Bearer " . $token)
-//            ->send();
+        //$token = $db->get(self::TOKEN_KEY);
+        //if (empty($token)) {
+        $token = $this->updateToken($this->secret, $db);
+        //}
 
-        $response = $this->client->get($uri, [
+
+        $response = $this->client->get('https://api.test.sabre.com/v1/shop/flights/fares', [
             'headers' => [
-                'Authorization' => 'Bearer '. $token,
+                'Authorization' => 'Bearer ' . $token,
             ]
         ]);
 
@@ -68,26 +66,36 @@ class SabreLaravelBridge {
         }
         return $response;
     }
+
     function updateToken($secret, $db)
     {
         $token = $this->getToken($secret);
         $db->put(self::TOKEN_KEY, $token);
         return $token;
     }
+
     function getToken($secret)
     {
-        $headers = array("Authorization" => "Basic " . $secret, "Content-Type" => "application/x-www-form-urlencoded");
+        $headers = [
+            "Authorization" => "Basic " . $secret,
+            "Content-Type" => "application/x-www-form-urlencoded"
+        ];
 
-        $response = Request::post($this->apiUrl . "/auth/token")
-            ->addHeaders($headers)
-            ->body("grant_type=client_credentials")
-            ->send();
+        $response = $this->client->post($this->apiUrl . "/auth/token", [
+            'headers' => [
+                $headers,
+            ],
+            'body' => 'grant_type=client_credentials',
+        ]);
+
+        exit($response);
 
         $resArr = json_decode($response);
         if (array_key_exists('access_token', $resArr)) {
             return $resArr->access_token;
         }
     }
+
     function translate($airportCode)
     {
         $airports = FileDB::entity('airports');
@@ -96,11 +104,13 @@ class SabreLaravelBridge {
             return array('longitude' => $row['lon'], 'latitude' => $row['lat'], 'city' => $row['city']);
         }
     }
+
     function airports($code)
     {
         $airports = FileDB::entity('airports');
         return $airports->filter('code', $code);
     }
+
     function formDestinationFinderResponse($input)
     {
         $list = new Collection();
