@@ -11,7 +11,7 @@ namespace Emcodenet\SabreLaravelBridge;
 
 class FileDB {
 
-    const DB_PATH = "db/";
+    const DB_PATH = ".db/";
     private $path;
     private $data = array();
     private static $entities = array();
@@ -21,7 +21,7 @@ class FileDB {
     }
     public static function entity($name)
     {
-        $p = self::DB_PATH . $name . ".db";
+        $p = self::DB_PATH . dirname(__FILE__) .'/'. $name . ".db";
         if (!file_exists($p)) {
             if (!file_exists(dirname($p))) {
                 mkdir(dirname($p), 0755, true);
