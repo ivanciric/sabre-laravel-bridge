@@ -1,0 +1,22 @@
+{
+    "name": "emcodenet/sabre-laravel-bridge",
+    "description": "Laravel port of https://github.com/SabreDevStudio/SabrePhpBridge",
+    "type": "Laravel package",
+    "license": "MIT",
+    "repositories": [
+      {
+        "type": "git",
+        "url": "https://github.com/nategood/httpful.git"
+      }
+    ],
+    "authors": [
+        {
+            "name": "Ivan Ciric",
+            "email": "ivan.it.office@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+      "nategood/httpful": "dev-master"
+    }
+}
